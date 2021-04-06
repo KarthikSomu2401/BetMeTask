@@ -19,10 +19,10 @@ var listener = app.listen(envs.PORT, function () {
 app.use("/sports", sports);
 app.use("/odds", odds);
 
-/* listener.on('listening', function () {
+listener.on('listening', function () {
     util.updateSports();
     util.updateFixtures();
-}); */
+});
 const task = cron.schedule('0 0 */1 * * *', () => {
     util.updateNotInPlay();
 });

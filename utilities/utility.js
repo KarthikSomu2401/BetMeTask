@@ -54,31 +54,37 @@ function updateFixtures(sportName = "upcoming", region = "uk", market = "h2h") {
     });
 }
 function updateFixturesAndReturn(sportName = "upcoming", region = "uk", market = "h2h") {
-    request({ method: "GET", url: `${envs.ODDS_API_URL_BASE}/v3/odds/?sport=${sportName}&region=${region}&mkt=${market}&apiKey=${envs.ODDS_API_KEY}` }).then(function (response) {
-        let fixturesData = JSON.parse(response);
-        if (response.statusCode === 200 && fixturesData.success) {
-            console.log("Data is getting stored!!");
-            fixturesData.data.map((fix) => {
-                let submitFixture = new Fixtures({
-                    id: fix.id,
-                    sport_key: fix.sport_key,
-                    sport_nice: fix.sport_nice,
-                    details: fix.details,
-                    teams: fix.teams,
-                    commence_time: fix.commence_time,
-                    home_team: fix.home_team,
-                    sites: fix.sites,
-                    sites_count: fix.sites_count
+    return new Promise(function (resolve, reject) {
+        request(`${envs.ODDS_API_URL_BASE}/v3/odds/?sport=${sportName}&region=${region}&mkt=${market}&apiKey=${envs.ODDS_API_KEY}`, function (error, response, body) {
+            let fixturesData = JSON.parse(body);
+            if (response.statusCode === 200 && fixturesData.success) {
+                console.log("Data is getting stored!!");
+                fixturesData.data.map((fix) => {
+                    let submitFixture = new Fixtures({
+                        id: fix.id,
+                        sport_key: fix.sport_key,
+                        sport_nice: fix.sport_nice,
+                        details: fix.details,
+                        teams: fix.teams,
+                        commence_time: fix.commence_time,
+                        home_team: fix.home_team,
+                        sites: fix.sites,
+                        sites_count: fix.sites_count
+                    });
+                    submitFixture
+                        .save()
+                        .then(() => { })
+                        .catch((err) => { });
                 });
-                submitFixture
-                    .save()
-                    .then(() => { })
-                    .catch((err) => { });
-            });
-            return fixturesData.data;
-        }
+                resolve(fixturesData.data);
+            }
+            else {
+                reject(response);
+            }
+        });
     });
 }
+
 async function updateNotInPlay() {
     let notInPlay = await Sports.find();
     notInPlay.map((sport) => {
